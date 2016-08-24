@@ -3,7 +3,7 @@ var async = require('async')
 
 function withDatabase(t, done, fn) {
     var driver = t.locals.driver
-    async.series([driver.connect, driver.deleteMigrations, fn, driver.disconnect], function(err) {
+    async.series([driver.connect, driver.dropMigrations, fn, driver.disconnect], function(err) {
         if (err) throw err
         done()
     })
