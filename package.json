@@ -13,7 +13,8 @@
     "husky": "^0.11.4"
   },
   "dependencies": {
-    "async": "^2.0.1"
+    "async": "^2.0.1",
+    "hath": "^1.0.0"
   },
   "scripts": {
     "test": "echo n/a",
