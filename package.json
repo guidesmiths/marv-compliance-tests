@@ -1,6 +1,6 @@
 {
   "name": "marv-compliance-tests",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Compliance tests for marv drivers",
   "main": "index.js",
   "author": "GuideSmiths Ltd",
