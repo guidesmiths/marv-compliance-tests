@@ -88,9 +88,29 @@ function shouldRunMigration(t, done) {
     })
 }
 
+
+function shouldRerunRepeatableMigration(t, done) {
+    var driver = t.locals.driver
+    var migration = t.locals.migration
+    withDatabase(t, done, function(cb) {
+        async.waterfall([
+            driver.ensureMigrations,
+            driver.runMigration.bind(driver, { level: migration.level, script: migration.script, audit: false }),
+            driver.runMigration.bind(driver, { level: migration.level, script: migration.script, audit: false }),
+            driver.getMigrations
+        ], function(err, migrations) {
+            if (err) throw err
+            t.assert(migrations, 'Migrations created')
+            t.assert(migrations.length === 0, 'Migrations table updated')
+            cb()
+        })
+    })
+}
+
 module.exports = Hath.suite('Compliance Tests', [
     shouldCreateMigrationTableIfNotExists,
     shouldNotFailIfMigrationTableAlreadyExists,
     shouldLockMigrationsTable,
-    shouldRunMigration
+    shouldRunMigration,
+    shouldRerunRepeatableMigration
 ])
