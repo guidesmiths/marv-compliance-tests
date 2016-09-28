@@ -1,11 +1,12 @@
 var Hath = require('hath')
 var async = require('async')
+require('hath-assert')(Hath)
 
 function withDatabase(t, done, fn) {
     var driver1 = t.locals.driver
     var driver2 = t.locals.driver2
     async.series([driver1.connect, driver2.connect, driver1.dropMigrations, fn, driver1.disconnect, driver2.disconnect], function(err) {
-        if (err) throw err
+        if (err) return done(err)
         done()
     })
 }
@@ -17,9 +18,9 @@ function shouldCreateMigrationTableIfNotExists(t, done) {
             meh1: driver.ensureMigrations,
             migrations: driver.getMigrations
         }, function(err, results) {
-            if (err) throw err
-            t.assert(results.migrations, 'Migrations created')
-            t.assert(results.migrations.length === 0, 'Migrations is an array')
+            if (err) return done(err)
+            t.assertTruthy(results.migrations, 'Migrations table was not created')
+            t.assertEquals(results.migrations.length, 0)
             cb()
         })
     })
@@ -31,10 +32,7 @@ function shouldNotFailIfMigrationTableAlreadyExists(t, done) {
         async.series([
             driver.ensureMigrations,
             driver.ensureMigrations
-        ], function(err) {
-            if (err) throw err
-            cb()
-        })
+        ], cb)
     })
 }
 
@@ -59,9 +57,9 @@ function shouldLockMigrationsTable(t, done) {
             driver2.lockMigrations,
             driver2.unlockMigrations
         ], function(err) {
-            if (err) throw err
-            t.assert(delay >= 200, 'Delay >= 200')
-            t.assert(delay <= 400, 'Delay <= 400')
+            if (err) return cb(err)
+            t.assertNotLess(delay, 200)
+            t.assertNotGreater(delay, 400)
             cb()
         })
     })
@@ -76,13 +74,13 @@ function shouldRunMigration(t, done) {
             driver.runMigration.bind(driver, migration),
             driver.getMigrations
         ], function(err, migrations) {
-            if (err) throw err
-            t.assert(migrations, 'Migrations created')
-            t.assert(migrations.length === 1, 'Migrations table updated')
-            t.assert(migrations[0].level === migration.level, 'Migration level')
-            t.assert(migrations[0].comment === migration.comment, 'Migration comment')
-            t.assert(migrations[0].timestamp.toISOString() === migration.timestamp.toISOString(), 'Migration timestamp')
-            t.assert(migrations[0].checksum === migration.checksum, 'Migration checksum')
+            if (err) return cb(err)
+            t.assertTruthy(migrations, 'Migrations created')
+            t.assertEquals(migrations.length, 1)
+            t.assertEquals(migrations[0].level, migration.level)
+            t.assertEquals(migrations[0].comment, migration.comment)
+            t.assertEquals(migrations[0].timestamp.toISOString(), migration.timestamp.toISOString())
+            t.assertEquals(migrations[0].checksum, migration.checksum)
             cb()
         })
     })
@@ -99,9 +97,9 @@ function shouldRerunRepeatableMigration(t, done) {
             driver.runMigration.bind(driver, { level: migration.level, script: migration.script, audit: false }),
             driver.getMigrations
         ], function(err, migrations) {
-            if (err) throw err
-            t.assert(migrations, 'Migrations created')
-            t.assert(migrations.length === 0, 'Migrations table updated')
+            if (err) return cb(err)
+            t.assertTruthy(migrations, 'Migrations created')
+            t.assertEquals(migrations.length, 0)
             cb()
         })
     })
