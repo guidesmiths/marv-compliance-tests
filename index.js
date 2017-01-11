@@ -86,15 +86,14 @@ function shouldRunMigration(t, done) {
     })
 }
 
-
 function shouldRerunRepeatableMigration(t, done) {
     var driver = t.locals.driver
     var migration = t.locals.migration
     withDatabase(t, done, function(cb) {
         async.waterfall([
             driver.ensureMigrations,
-            driver.runMigration.bind(driver, { level: migration.level, script: migration.script, audit: false }),
-            driver.runMigration.bind(driver, { level: migration.level, script: migration.script, audit: false }),
+            driver.runMigration.bind(driver, { level: migration.level, script: migration.script, directives: { audit: false } }),
+            driver.runMigration.bind(driver, { level: migration.level, script: migration.script, directives: { audit: false } }),
             driver.getMigrations
         ], function(err, migrations) {
             if (err) return cb(err)
