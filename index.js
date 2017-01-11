@@ -11,7 +11,8 @@ function withDatabase(t, done, fn) {
     })
 }
 
-function shouldCreateMigrationTableIfNotExists(t, done) {
+function shouldCreateMigrationsTableIfNotExists(t, done) {
+    t.label('should create migration table if not exists')
     var driver = t.locals.driver
     withDatabase(t, done, function(cb) {
         async.series({
@@ -26,7 +27,8 @@ function shouldCreateMigrationTableIfNotExists(t, done) {
     })
 }
 
-function shouldNotFailIfMigrationTableAlreadyExists(t, done) {
+function shouldNotFailIfMigrationsTableAlreadyExists(t, done) {
+    t.label('should not fail if migration table already exists')
     var driver = t.locals.driver
     withDatabase(t, done, function(cb) {
         async.series([
@@ -37,6 +39,7 @@ function shouldNotFailIfMigrationTableAlreadyExists(t, done) {
 }
 
 function shouldLockMigrationsTable(t, done) {
+    t.label('should lock migrations table')
     var driver1 = t.locals.driver
     var driver2 = t.locals.driver2
     var delay
@@ -66,8 +69,9 @@ function shouldLockMigrationsTable(t, done) {
 }
 
 function shouldRunMigration(t, done) {
+    t.label('should run migration')
     var driver = t.locals.driver
-    var migration = t.locals.migration
+    var migration = t.locals.migrations.simple
     withDatabase(t, done, function(cb) {
         async.waterfall([
             driver.ensureMigrations,
@@ -87,8 +91,9 @@ function shouldRunMigration(t, done) {
 }
 
 function shouldRerunRepeatableMigration(t, done) {
+    t.label('should rerun repeatable migration')
     var driver = t.locals.driver
-    var migration = t.locals.migration
+    var migration = t.locals.migrations.simple
     withDatabase(t, done, function(cb) {
         async.waterfall([
             driver.ensureMigrations,
@@ -104,10 +109,66 @@ function shouldRerunRepeatableMigration(t, done) {
     })
 }
 
+function shouldHonourCommentDirectiveFromScript(t, done) {
+    t.label('should honour comment directive from script')
+    var driver = t.locals.driver
+    var migration = t.locals.migrations.comment
+    withDatabase(t, done, function(cb) {
+        async.waterfall([
+            driver.ensureMigrations,
+            driver.runMigration.bind(driver, migration),
+            driver.getMigrations
+        ], function(err, migrations) {
+            if (err) return cb(err)
+            t.assertEquals(migrations[0].comment, 'override')
+            cb()
+        })
+    })
+}
+
+function shouldHonourAuditDirectiveFromScript(t, done) {
+    t.label('should honour audit directive from script')
+    var driver = t.locals.driver
+    var migration = t.locals.migrations.audit
+    withDatabase(t, done, function(cb) {
+        async.waterfall([
+            driver.ensureMigrations,
+            driver.runMigration.bind(driver, migration),
+            driver.runMigration.bind(driver, migration),
+            driver.getMigrations
+        ], function(err, migrations) {
+            if (err) return cb(err)
+            t.assertEquals(migrations.length, 0)
+            cb()
+        })
+    })
+}
+
+function shouldHonourSkipDirectiveFromScript(t, done) {
+    t.label('should honour skip directive from script')
+    var driver = t.locals.driver
+    var migration = t.locals.migrations.skip
+    withDatabase(t, done, function(cb) {
+        async.waterfall([
+            driver.ensureMigrations,
+            driver.runMigration.bind(driver, migration),
+            driver.getMigrations
+        ], function(err, migrations) {
+            if (err) return cb(err)
+            t.assertEquals(migrations.length, 0)
+            cb()
+        })
+    })
+}
+
+
 module.exports = Hath.suite('Compliance Tests', [
-    shouldCreateMigrationTableIfNotExists,
-    shouldNotFailIfMigrationTableAlreadyExists,
+    shouldCreateMigrationsTableIfNotExists,
+    shouldNotFailIfMigrationsTableAlreadyExists,
     shouldLockMigrationsTable,
     shouldRunMigration,
-    shouldRerunRepeatableMigration
+    shouldRerunRepeatableMigration,
+    shouldHonourCommentDirectiveFromScript,
+    shouldHonourAuditDirectiveFromScript,
+    shouldHonourSkipDirectiveFromScript
 ])
