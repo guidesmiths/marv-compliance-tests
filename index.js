@@ -161,6 +161,24 @@ function shouldHonourSkipDirectiveFromScript(t, done) {
     })
 }
 
+function shouldReportMigrationErrors(t, done) {
+    t.label('should report migration errors')
+    var driver = t.locals.driver
+    var migration = t.locals.migrations.fail
+    withDatabase(t, done, function(cb) {
+        async.waterfall([
+            driver.ensureMigrations,
+            driver.runMigration.bind(driver, migration)
+        ], function(err) {
+            t.assertTruthy(err)
+            t.assertTruthy(err.migration)
+            t.assertEquals(err.migration.level, 5)
+            t.assertEquals(err.migration.script, 'INVALID')
+            cb()
+        })
+    })
+}
+
 
 module.exports = Hath.suite('Compliance Tests', [
     shouldCreateMigrationsTableIfNotExists,
@@ -170,5 +188,6 @@ module.exports = Hath.suite('Compliance Tests', [
     shouldRerunRepeatableMigration,
     shouldHonourCommentDirectiveFromScript,
     shouldHonourAuditDirectiveFromScript,
-    shouldHonourSkipDirectiveFromScript
+    shouldHonourSkipDirectiveFromScript,
+    shouldReportMigrationErrors
 ])
