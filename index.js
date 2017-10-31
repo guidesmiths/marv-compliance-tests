@@ -109,6 +109,53 @@ function shouldRerunRepeatableMigration(t, done) {
     })
 }
 
+function shouldRecordNamespace(t, done) {
+    t.label('should record namespace')
+    var driver = t.locals.driver
+    var migration = t.locals.migrations.namespace
+    withDatabase(t, done, function(cb) {
+        async.waterfall([
+            driver.ensureMigrations,
+            driver.runMigration.bind(driver, migration),
+            driver.getMigrations
+        ], function(err, migrations) {
+            if (err) return cb(err)
+            t.assertTruthy(migrations, 'Migrations created')
+            t.assertEquals(migrations.length, 1)
+            t.assertEquals(migrations[0].level, migration.level)
+            t.assertEquals(migrations[0].comment, migration.comment)
+            t.assertEquals(migrations[0].timestamp.toISOString(), migration.timestamp.toISOString())
+            t.assertEquals(migrations[0].checksum, migration.checksum)
+            t.assertEquals(migrations[0].namespace, migration.namespace)
+            cb()
+        })
+    })
+}
+
+function shouldIsolateByNamespace(t, done) {
+    t.label('should isolate by namespace')
+    var driver = t.locals.driver
+    var simple =  t.locals.migrations.simple
+    var namespaced = t.locals.migrations.namespace
+    withDatabase(t, done, function(cb) {
+        async.waterfall([
+            driver.ensureMigrations,
+            driver.runMigration.bind(driver, simple),
+            driver.runMigration.bind(driver, namespaced),
+            driver.getMigrations
+        ], function(err, migrations) {
+            if (err) return cb(err)
+            t.assertTruthy(migrations, 'Migrations created')
+            t.assertEquals(migrations.length, 2)
+            t.assertEquals(migrations[0].namespace, 'default')
+            t.assertEquals(migrations[1].namespace, namespaced.namespace)
+            cb()
+        })
+    })
+}
+
+
+
 function shouldHonourCommentDirectiveFromScript(t, done) {
     t.label('should honour comment directive from script')
     var driver = t.locals.driver
@@ -186,6 +233,8 @@ module.exports = Hath.suite('Compliance Tests', [
     shouldLockMigrationsTable,
     shouldRunMigration,
     shouldRerunRepeatableMigration,
+    shouldRecordNamespace,
+    shouldIsolateByNamespace,
     shouldHonourCommentDirectiveFromScript,
     shouldHonourAuditDirectiveFromScript,
     shouldHonourSkipDirectiveFromScript,
