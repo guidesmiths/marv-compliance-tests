@@ -27,6 +27,23 @@ function shouldCreateMigrationsTableIfNotExists(t, done) {
     })
 }
 
+function shouldCreateMigrationsTableInParallel(t, done) {
+    t.label('should create migration table in parallel')
+    var driver = t.locals.driver
+    var driver2 = t.locals.driver2
+    withDatabase(t, done, function(cb) {
+        async.series({
+            meh1: async.parallel.bind(async, [driver.ensureMigrations, driver2.ensureMigrations]),
+            migrations: driver.getMigrations
+        }, function(err, results) {
+            if (err) return done(err)
+            t.assertTruthy(results.migrations, 'Migrations table was not created')
+            t.assertEquals(results.migrations.length, 0)
+            cb()
+        })
+    })
+}
+
 function shouldNotFailIfMigrationsTableAlreadyExists(t, done) {
     t.label('should not fail if migration table already exists')
     var driver = t.locals.driver
@@ -229,6 +246,7 @@ function shouldReportMigrationErrors(t, done) {
 
 module.exports = Hath.suite('Compliance Tests', [
     shouldCreateMigrationsTableIfNotExists,
+    shouldCreateMigrationsTableInParallel,
     shouldNotFailIfMigrationsTableAlreadyExists,
     shouldLockMigrationsTable,
     shouldRunMigration,
