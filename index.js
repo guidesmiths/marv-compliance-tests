@@ -171,60 +171,6 @@ function shouldIsolateByNamespace(t, done) {
     })
 }
 
-
-
-function shouldHonourCommentDirectiveFromScript(t, done) {
-    t.label('should honour comment directive from script')
-    var driver = t.locals.driver
-    var migration = t.locals.migrations.comment
-    withDatabase(t, done, function(cb) {
-        async.waterfall([
-            driver.ensureMigrations,
-            driver.runMigration.bind(driver, migration),
-            driver.getMigrations
-        ], function(err, migrations) {
-            if (err) return cb(err)
-            t.assertEquals(migrations[0].comment, 'override')
-            cb()
-        })
-    })
-}
-
-function shouldHonourAuditDirectiveFromScript(t, done) {
-    t.label('should honour audit directive from script')
-    var driver = t.locals.driver
-    var migration = t.locals.migrations.audit
-    withDatabase(t, done, function(cb) {
-        async.waterfall([
-            driver.ensureMigrations,
-            driver.runMigration.bind(driver, migration),
-            driver.runMigration.bind(driver, migration),
-            driver.getMigrations
-        ], function(err, migrations) {
-            if (err) return cb(err)
-            t.assertEquals(migrations.length, 0)
-            cb()
-        })
-    })
-}
-
-function shouldHonourSkipDirectiveFromScript(t, done) {
-    t.label('should honour skip directive from script')
-    var driver = t.locals.driver
-    var migration = t.locals.migrations.skip
-    withDatabase(t, done, function(cb) {
-        async.waterfall([
-            driver.ensureMigrations,
-            driver.runMigration.bind(driver, migration),
-            driver.getMigrations
-        ], function(err, migrations) {
-            if (err) return cb(err)
-            t.assertEquals(migrations.length, 0)
-            cb()
-        })
-    })
-}
-
 function shouldReportMigrationErrors(t, done) {
     t.label('should report migration errors')
     var driver = t.locals.driver
@@ -253,8 +199,5 @@ module.exports = Hath.suite('Compliance Tests', [
     shouldRerunRepeatableMigration,
     shouldRecordNamespace,
     shouldIsolateByNamespace,
-    shouldHonourCommentDirectiveFromScript,
-    shouldHonourAuditDirectiveFromScript,
-    shouldHonourSkipDirectiveFromScript,
     shouldReportMigrationErrors
 ])
