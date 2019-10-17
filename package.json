@@ -9,7 +9,7 @@
     "eslint": "^6.5.1",
     "eslint-config-imperative": "^3.0.0",
     "eslint-plugin-imperative": "^3.0.0",
-    "husky": "^0.11.4"
+    "husky": "^3.0.9"
   },
   "dependencies": {
     "async": "^3.1.0",
@@ -18,8 +18,7 @@
   },
   "scripts": {
     "test": "echo n/a",
-    "lint": "eslint .",
-    "prepush": "npm run lint && npm test"
+    "lint": "eslint ."
   },
   "repository": {
     "type": "git",
@@ -28,5 +27,10 @@
   "bugs": {
     "url": "https://github.com/guidesmiths/marv-compliance-tests/issues"
   },
-  "homepage": "https://github.com/guidesmiths/marv-compliance-tests#readme"
+  "homepage": "https://github.com/guidesmiths/marv-compliance-tests#readme",
+  "husky": {
+    "hooks": {
+      "pre-push": "npm run lint && npm test"
+    }
+  }
 }
