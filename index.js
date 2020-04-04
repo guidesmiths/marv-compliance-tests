@@ -78,7 +78,7 @@ function shouldLockMigrationsTable(t, done) {
             driver2.unlockMigrations
         ], function(err) {
             if (err) return cb(err)
-            t.assertNotLess(delay, 200)
+            t.assertNotLess(delay, 199)
             t.assertNotGreater(delay, 400)
             cb()
         })
