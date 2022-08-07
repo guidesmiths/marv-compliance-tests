@@ -5,20 +5,23 @@
   "main": "index.js",
   "author": "GuideSmiths Ltd",
   "license": "ISC",
-  "devDependencies": {
-    "eslint": "^6.8.0",
-    "eslint-config-imperative": "^3.0.0",
-    "eslint-plugin-imperative": "^3.0.0",
-    "husky": "^4.2.3"
-  },
   "dependencies": {
     "async": "^3.2.0",
     "hath": "^1.0.1",
     "hath-assert": "^0.2.0"
   },
+  "devDependencies": {
+    "eslint": "^8.21.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.1",
+    "lint-staged": "^13.0.3",
+    "prettier": "2.7.1"
+  },
   "scripts": {
     "test": "echo n/a",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "prepare": "husky install"
   },
   "repository": {
     "type": "git",
@@ -28,9 +31,7 @@
     "url": "https://github.com/guidesmiths/marv-compliance-tests/issues"
   },
   "homepage": "https://github.com/guidesmiths/marv-compliance-tests#readme",
-  "husky": {
-    "hooks": {
-      "pre-push": "npm run lint && npm test"
-    }
+  "lint-staged": {
+    "**/*": "prettier --write --ignore-unknown"
   }
 }
