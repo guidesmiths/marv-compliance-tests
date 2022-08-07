@@ -1,11 +1,11 @@
-var Hath = require('hath');
-var async = require('async');
+const Hath = require('hath');
+const async = require('async');
 require('hath-assert')(Hath);
 
 function withDatabase(t, done, fn) {
-  var driver1 = t.locals.driver;
-  var driver2 = t.locals.driver2;
-  async.series([driver1.connect, driver2.connect, driver1.dropMigrations, fn, driver1.disconnect, driver2.disconnect], function (err) {
+  const driver1 = t.locals.driver;
+  const { driver2 } = t.locals;
+  async.series([driver1.connect, driver2.connect, driver1.dropMigrations, fn, driver1.disconnect, driver2.disconnect], (err) => {
     if (err) return done(err);
     done();
   });
@@ -13,14 +13,14 @@ function withDatabase(t, done, fn) {
 
 function shouldCreateMigrationsTableIfNotExists(t, done) {
   t.label('should create migration table if not exists');
-  var driver = t.locals.driver;
-  withDatabase(t, done, function (cb) {
+  const { driver } = t.locals;
+  withDatabase(t, done, (cb) => {
     async.series(
       {
         meh1: driver.ensureMigrations,
         migrations: driver.getMigrations,
       },
-      function (err, results) {
+      (err, results) => {
         if (err) return done(err);
         t.assertTruthy(results.migrations, 'Migrations table was not created');
         t.assertEquals(results.migrations.length, 0);
@@ -32,15 +32,15 @@ function shouldCreateMigrationsTableIfNotExists(t, done) {
 
 function shouldCreateMigrationsTableInParallel(t, done) {
   t.label('should create migration table in parallel');
-  var driver = t.locals.driver;
-  var driver2 = t.locals.driver2;
-  withDatabase(t, done, function (cb) {
+  const { driver } = t.locals;
+  const { driver2 } = t.locals;
+  withDatabase(t, done, (cb) => {
     async.series(
       {
         meh1: async.parallel.bind(async, [driver.ensureMigrations, driver2.ensureMigrations]),
         migrations: driver.getMigrations,
       },
-      function (err, results) {
+      (err, results) => {
         if (err) return done(err);
         t.assertTruthy(results.migrations, 'Migrations table was not created');
         t.assertEquals(results.migrations.length, 0);
@@ -52,28 +52,28 @@ function shouldCreateMigrationsTableInParallel(t, done) {
 
 function shouldNotFailIfMigrationsTableAlreadyExists(t, done) {
   t.label('should not fail if migration table already exists');
-  var driver = t.locals.driver;
-  withDatabase(t, done, function (cb) {
+  const { driver } = t.locals;
+  withDatabase(t, done, (cb) => {
     async.series([driver.ensureMigrations, driver.ensureMigrations], cb);
   });
 }
 
 function shouldLockMigrationsTable(t, done) {
   t.label('should lock migrations table');
-  var driver1 = t.locals.driver;
-  var driver2 = t.locals.driver2;
-  var delay;
-  withDatabase(t, done, function (cb) {
+  const driver1 = t.locals.driver;
+  const { driver2 } = t.locals;
+  let delay;
+  withDatabase(t, done, (cb) => {
     async.series(
       [
         driver1.ensureMigrations,
         driver1.lockMigrations,
-        function (cb) {
+        (cb) => {
           delay = Date.now();
           cb();
         },
-        function (cb) {
-          setTimeout(function () {
+        (cb) => {
+          setTimeout(() => {
             driver1.unlockMigrations(cb);
             delay = Date.now() - delay;
           }, 200);
@@ -81,7 +81,7 @@ function shouldLockMigrationsTable(t, done) {
         driver2.lockMigrations,
         driver2.unlockMigrations,
       ],
-      function (err) {
+      (err) => {
         if (err) return cb(err);
         t.assertNotLess(delay, 199);
         t.assertNotGreater(delay, 400);
@@ -93,10 +93,10 @@ function shouldLockMigrationsTable(t, done) {
 
 function shouldRunMigration(t, done) {
   t.label('should run migration');
-  var driver = t.locals.driver;
-  var migration = t.locals.migrations.simple;
-  withDatabase(t, done, function (cb) {
-    async.waterfall([driver.ensureMigrations, driver.runMigration.bind(driver, migration), driver.getMigrations], function (err, migrations) {
+  const { driver } = t.locals;
+  const migration = t.locals.migrations.simple;
+  withDatabase(t, done, (cb) => {
+    async.waterfall([driver.ensureMigrations, driver.runMigration.bind(driver, migration), driver.getMigrations], (err, migrations) => {
       if (err) return cb(err);
       t.assertTruthy(migrations, 'Migrations created');
       t.assertEquals(migrations.length, 1);
@@ -111,12 +111,12 @@ function shouldRunMigration(t, done) {
 
 function shouldRerunRepeatableMigration(t, done) {
   t.label('should rerun repeatable migration');
-  var driver = t.locals.driver;
-  var migration = t.locals.migrations.simple;
-  withDatabase(t, done, function (cb) {
+  const { driver } = t.locals;
+  const migration = t.locals.migrations.simple;
+  withDatabase(t, done, (cb) => {
     async.waterfall(
       [driver.ensureMigrations, driver.runMigration.bind(driver, { level: migration.level, script: migration.script, directives: { audit: false } }), driver.runMigration.bind(driver, { level: migration.level, script: migration.script, directives: { audit: false } }), driver.getMigrations],
-      function (err, migrations) {
+      (err, migrations) => {
         if (err) return cb(err);
         t.assertTruthy(migrations, 'Migrations created');
         t.assertEquals(migrations.length, 0);
@@ -128,10 +128,10 @@ function shouldRerunRepeatableMigration(t, done) {
 
 function shouldRecordNamespace(t, done) {
   t.label('should record namespace');
-  var driver = t.locals.driver;
-  var migration = t.locals.migrations.namespace;
-  withDatabase(t, done, function (cb) {
-    async.waterfall([driver.ensureMigrations, driver.runMigration.bind(driver, migration), driver.getMigrations], function (err, migrations) {
+  const { driver } = t.locals;
+  const migration = t.locals.migrations.namespace;
+  withDatabase(t, done, (cb) => {
+    async.waterfall([driver.ensureMigrations, driver.runMigration.bind(driver, migration), driver.getMigrations], (err, migrations) => {
       if (err) return cb(err);
       t.assertTruthy(migrations, 'Migrations created');
       t.assertEquals(migrations.length, 1);
@@ -147,11 +147,11 @@ function shouldRecordNamespace(t, done) {
 
 function shouldIsolateByNamespace(t, done) {
   t.label('should isolate by namespace');
-  var driver = t.locals.driver;
-  var simple = t.locals.migrations.simple;
-  var namespaced = t.locals.migrations.namespace;
-  withDatabase(t, done, function (cb) {
-    async.waterfall([driver.ensureMigrations, driver.runMigration.bind(driver, simple), driver.runMigration.bind(driver, namespaced), driver.getMigrations], function (err, migrations) {
+  const { driver } = t.locals;
+  const { simple } = t.locals.migrations;
+  const namespaced = t.locals.migrations.namespace;
+  withDatabase(t, done, (cb) => {
+    async.waterfall([driver.ensureMigrations, driver.runMigration.bind(driver, simple), driver.runMigration.bind(driver, namespaced), driver.getMigrations], (err, migrations) => {
       if (err) return cb(err);
       t.assertTruthy(migrations, 'Migrations created');
       t.assertEquals(migrations.length, 2);
@@ -164,10 +164,10 @@ function shouldIsolateByNamespace(t, done) {
 
 function shouldReportMigrationErrors(t, done) {
   t.label('should report migration errors');
-  var driver = t.locals.driver;
-  var migration = t.locals.migrations.fail;
-  withDatabase(t, done, function (cb) {
-    async.waterfall([driver.ensureMigrations, driver.runMigration.bind(driver, migration)], function (err) {
+  const { driver } = t.locals;
+  const migration = t.locals.migrations.fail;
+  withDatabase(t, done, (cb) => {
+    async.waterfall([driver.ensureMigrations, driver.runMigration.bind(driver, migration)], (err) => {
       t.assertTruthy(err);
       t.assertTruthy(err.migration);
       t.assertEquals(err.migration.level, 5);

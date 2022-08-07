@@ -1,0 +1,14 @@
+{
+  "extends": ["eslint-config-airbnb-base", "prettier"],
+  "env": {
+    "node": true
+  },
+  "parserOptions": {
+    "ecmaVersion": "2017"
+  },
+  "rules": {
+    "consistent-return": 0,
+    "no-shadow": ["error", { "allow": ["cb"] }],
+    "vars-on-top": 0
+  }
+}
