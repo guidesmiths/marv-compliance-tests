@@ -7,8 +7,6 @@
   "license": "ISC",
   "dependencies": {
     "async": "^3.2.4",
-    "hath": "^1.0.1",
-    "hath-assert": "^0.2.0",
     "zunit": "^3.2.1"
   },
   "devDependencies": {
@@ -22,6 +20,7 @@
   "scripts": {
     "test": "echo n/a",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "prepare": "husky install"
   },
   "repository": {
@@ -33,6 +32,7 @@
   },
   "homepage": "https://github.com/guidesmiths/marv-compliance-tests#readme",
   "lint-staged": {
+    "**/*.js": "eslint --fix",
     "**/*": "prettier --write --ignore-unknown"
   }
 }
